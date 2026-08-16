@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "redforge"
+version = "0.1.0"
+description = "AI Red Team Attack Toolkit - automated adversarial testing for LLMs"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Cybersecurity and AI Security Expert" }]
+
+# Runtime dependencies. We keep this lean:
+#   httpx     - async HTTP client used by every target adapter
+#   pydantic  - type-safe config + data models
+#   pyyaml    - read/write YAML config and payload files
+#   typer     - CLI framework (thin layer over click)
+#   rich      - pretty terminal output (tables, progress bars)
+#   jinja2    - HTML/Markdown report templating
+dependencies = [
+    "httpx>=0.27",
+    "pydantic>=2.7",
+    "PyYAML>=6.0",
+    "typer>=0.12",
+    "rich>=13.7",
+    "Jinja2>=3.1",
+]
+
+[project.optional-dependencies]
+# Optional SDKs. We actually call providers via httpx directly (more portable),
+# but keep these as optional extras for users who prefer the official SDKs.
+providers = [
+    "openai>=1.30",
+    "anthropic>=0.30",
+]
+dev = [
+    "pytest>=8.0",
+]
+
+[project.scripts]
+# Installs a `redforge` command that runs redforge.cli:main
+redforge = "redforge.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["redforge*"]

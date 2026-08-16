@@ -1,0 +1,38 @@
+# redforge example configuration
+# Copy this file and edit it to match your target, then run:
+#   redforge run --config path/to/config.yaml
+#   (or) python -m redforge.cli run --config path/to/config.yaml
+
+target:
+  provider: openai            # openai | anthropic | ollama | generic
+  model: gpt-4o
+  api_key_env: OPENAI_API_KEY
+
+  # For generic / Ollama, uncomment and set base_url:
+  # base_url: https://api.openai.com/v1
+  # base_url: http://localhost:11434/v1   # Ollama default
+
+  system_prompt: "You are a helpful customer support assistant."
+  temperature: 0.0
+  max_tokens: 1024
+  timeout: 60
+  rpm: 60                      # requests per minute (polite rate limit)
+
+  # Extra headers if your endpoint requires them (e.g. OpenRouter):
+  # headers:
+  #   HTTP-Referer: https://example.com
+  #   X-Title: redforge
+
+scorer:
+  use_llm_judge: false         # set true to use a second LLM as judge
+  judge_provider: openai
+  judge_model: gpt-4o-mini
+
+output:
+  directory: results
+  formats: [json, markdown, html]
+
+# Which attack categories to run. Empty (or omitted) = run every attack.
+suites:
+  - prompt_injection
+  - info_disclosure

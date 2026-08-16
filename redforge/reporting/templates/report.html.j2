@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>redforge report — {{ stats.model }}</title>
+<style>
+  :root { color-scheme: dark; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: #0f1115; color: #e6e8eb; margin: 0; padding: 2rem; max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 1.6rem; margin-bottom: .25rem; }
+  .sub { color: #9aa4b2; font-size: .9rem; margin-bottom: 2rem; }
+  .cards { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+  .card { background: #161a22; border: 1px solid #232a36; border-radius: 10px; padding: 1rem 1.4rem; min-width: 140px; }
+  .num { font-size: 1.8rem; font-weight: 700; }
+  .lbl { color: #9aa4b2; font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; }
+  table { width: 100%; border-collapse: collapse; background: #161a22; border-radius: 10px; overflow: hidden; margin-bottom: 2rem; }
+  th, td { text-align: left; padding: .6rem .8rem; border-bottom: 1px solid #232a36; font-size: .9rem; }
+  th { background: #1b212c; color: #9aa4b2; font-weight: 600; }
+  .critical { color: #ff6b6b; } .high { color: #ffa94d; } .medium { color: #ffd43b; } .low { color: #69db7c; }
+  .BYPASSED { color: #ff6b6b; font-weight: 600; } .BLOCKED { color: #69db7c; font-weight: 600; }
+  code { background: #1b212c; padding: .1em .35em; border-radius: 4px; font-size: .85em; }
+  details { background: #161a22; border: 1px solid #232a36; border-radius: 8px; padding: .8rem 1rem; margin-bottom: .6rem; }
+  summary { cursor: pointer; font-weight: 600; }
+  .meta { color: #9aa4b2; font-size: .85rem; margin-top: .4rem; }
+  .turn { margin: .4rem 0; font-size: .85rem; }
+  .turn b { color: #9aa4b2; }
+  .mitigations { color: #9aa4b2; font-size: .85rem; }
+</style>
+</head>
+<body>
+<h1>🛡️ redforge — AI Red Team Report</h1>
+<div class="sub">Model: <code>{{ stats.model }}</code> · Generated {{ stats.generated_at }} UTC</div>
+
+<div class="cards">
+  <div class="card"><div class="num">{{ stats.total }}</div><div class="lbl">Attacks</div></div>
+  <div class="card"><div class="num" style="color:#ff6b6b">{{ stats.bypassed }}</div><div class="lbl">Bypassed ({{ stats.bypass_rate }}%)</div></div>
+  <div class="card"><div class="num" style="color:#69db7c">{{ stats.blocked }}</div><div class="lbl">Blocked</div></div>
+</div>
+
+<h2>By category</h2>
+<table>
+  <tr><th>Category</th><th>Total</th><th>Bypassed</th><th>Rate</th></tr>
+  {% for cat, v in stats.by_category.items() %}
+  <tr><td>{{ cat }}</td><td>{{ v.total }}</td><td>{{ v.bypassed }}</td><td>{{ (v.bypassed / v.total * 100)|round|int }}%</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Findings</h2>
+<table>
+  <tr><th>Attack</th><th>OWASP</th><th>Severity</th><th>Verdict</th><th>Confidence</th><th>Signal</th></tr>
+  {% for r in results %}
+  <tr>
+    <td>{{ r.attack_name }} <small>({{ r.attack_id }})</small></td>
+    <td>{{ r.owasp }}</td>
+    <td class="{{ r.severity }}">{{ r.severity }}</td>
+    <td class="{{ r.verdict }}">{{ r.verdict }}</td>
+    <td>{{ "%.0f"|format(r.confidence * 100) }}%</td>
+    <td><code>{{ r.matched_signal or "—" }}</code></td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Details &amp; mitigations</h2>
+{% for r in results %}
+<details>
+  <summary><span class="{{ r.verdict }}">{{ r.verdict }}</span> — {{ r.attack_name }} ({{ r.owasp }})</summary>
+  <div class="meta">
+    Confidence {{ "%.0f"|format(r.confidence * 100) }}% · Signal <code>{{ r.matched_signal or "—" }}</code> ·
+    Latency {{ r.latency_ms }}ms{% if r.error %} · Error: {{ r.error }}{% endif %}
+  </div>
+  <p>{{ r.explanation }}</p>
+  {% set ow = owasp(r.owasp) %}
+  <p class="mitigations"><b>{{ ow.name }}:</b> {{ ow.description }}</p>
+  <ul class="mitigations">
+    {% for m in ow.mitigations %}<li>{{ m }}</li>{% endfor %}
+  </ul>
+  {% for t in r.conversation %}
+  <div class="turn"><b>{{ t.role }}:</b> {{ t.content }}</div>
+  {% endfor %}
+</details>
+{% endfor %}
+</body>
+</html>
